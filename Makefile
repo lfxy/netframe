@@ -7,7 +7,7 @@ CXX = g++
 RM := rm
 VPATH =.
 CXXPPFLAGS :=
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -Wall -g
 CXXLDFLAGS = -lpthread
 LIBDIRS :=
 

@@ -8,11 +8,6 @@
 #include "pollingserver.h"
 #include<iostream>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -31,36 +26,10 @@ int main(int argc, char** argv)
     const char* ip = argv[1];
     int port = atoi(argv[2]);
 
-    int ret = 0;
-    struct sockaddr_in address;
-    bzero(&address, sizeof(address));
-    address.sin_family = AF_INET;
-    inet_pton(AF_INET, ip, &address.sin_addr);
-    address.sin_port = htons(port);
-
-    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    assert(listenfd >= 0);
-    ret = bind(listenfd, (struct sockaddr*) &address, sizeof(address));
-    assert(ret != -1);
-    ret = listen(listenfd, 5);
-    assert(ret != -1);
-
-    epoll_event events[MAX_EVENT_NUMBER];
-    int epollfd = epoll_create(5);
-    assert(epollfd != -1);
     PollingServer pollserv;
-    pollserv.AddFd(epollfd, listenfd, true);
-    while(1)
-    {
-        int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
-        printf("After epoll_wait here\n");
-        if(ret < 0)
-        {
-            printf("epoll failure\n");
-            break;
-        }
-    pollserv.LtModel(events, ret, epollfd, listenfd);
-    }
-    close(listenfd);
+    std::string servname = "GenerateId";
+    pollserv.Init(servname, ip, port);
+    pollserv.Run();
+    pollserv.Release();
     return 0;
 }

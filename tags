@@ -5,18 +5,19 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 AddFd	pollingserver.cpp	/^void  PollingServer::AddFd(int epollfd, int fd, bool enable_et)$/;"	f	class:PollingServer
-BUFFER_SIZE	pollingserver.cpp	18;"	d	file:
+BUFFER_SIZE	pollingserver.cpp	20;"	d	file:
 CXX	Makefile	/^CXX = g++$/;"	m
-CXXFLAGS	Makefile	/^CXXFLAGS = -Wall -O2$/;"	m
+CXXFLAGS	Makefile	/^CXXFLAGS = -Wall -g$/;"	m
 CXXLDFLAGS	Makefile	/^CXXLDFLAGS = -lpthread$/;"	m
 CXXPPFLAGS	Makefile	/^CXXPPFLAGS :=$/;"	m
 DIRS	Makefile	/^DIRS :=.$/;"	m
+EtModel	pollingserver.cpp	/^void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int listenfd)$/;"	f	class:PollingServer
 FILES	Makefile	/^FILES = $(foreach dir, $(DIRS), $(wildcard $(dir)\/*.cpp))$/;"	m
-Init	pollingserver.cpp	/^void PollingServer::Init(std::string& name)$/;"	f	class:PollingServer
+Init	pollingserver.cpp	/^void PollingServer::Init(std::string& name, std::string ip, int port)$/;"	f	class:PollingServer
 LIBDIRS	Makefile	/^LIBDIRS :=$/;"	m
 LtModel	pollingserver.cpp	/^void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)$/;"	f	class:PollingServer
-MAX_EVENT_NUMBER	main.cpp	22;"	d	file:
-MAX_EVENT_NUMBER	pollingserver.cpp	17;"	d	file:
+MAX_EVENT_NUMBER	main.cpp	17;"	d	file:
+MAX_EVENT_NUMBER	pollingserver.cpp	19;"	d	file:
 OBJS	Makefile	/^OBJS = $(patsubst %.cpp, %.o, $(FILES))$/;"	m
 PollingServer	pollingserver.cpp	/^PollingServer::PollingServer()$/;"	f	class:PollingServer
 PollingServer	pollingserver.h	/^class PollingServer$/;"	c
@@ -26,9 +27,12 @@ Run	pollingserver.cpp	/^void PollingServer::Run()$/;"	f	class:PollingServer
 TARGET	Makefile	/^TARGET = myprocess$/;"	m
 VPATH	Makefile	/^VPATH =.$/;"	m
 _POLLING_SERVER_H_	pollingserver.h	2;"	d
-m_ServicName	pollingserver.h	/^    std::string m_ServicName;$/;"	m	class:PollingServer
 m_key	pollingserver.h	/^    std::string m_key;$/;"	m	class:PollingServer
+m_running	pollingserver.h	/^    bool m_running;$/;"	m	class:PollingServer
+m_servicName	pollingserver.h	/^    std::string m_servicName;$/;"	m	class:PollingServer
+m_serviceIp	pollingserver.h	/^    std::string m_serviceIp;$/;"	m	class:PollingServer
 m_serviceKey	pollingserver.h	/^    std::map<std::string, int> m_serviceKey;$/;"	m	class:PollingServer
+m_servicePort	pollingserver.h	/^    std::string m_servicePort;$/;"	m	class:PollingServer
 m_setNonblocking	pollingserver.cpp	/^int PollingServer::m_setNonblocking(int fd)$/;"	f	class:PollingServer
 main	main.cpp	/^int main(int argc, char** argv)$/;"	f
 ~PollingServer	pollingserver.cpp	/^PollingServer::~PollingServer()$/;"	f	class:PollingServer
