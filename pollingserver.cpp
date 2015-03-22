@@ -12,6 +12,7 @@
 //#include <sys/epoll.h>
 #include <pthread.h>
 #include <assert.h>
+#include <sstream>
 
 
 using namespace std;
@@ -59,7 +60,7 @@ void PollingServer::Run()
     epoll_event events[MAX_EVENT_NUMBER];
     int epollfd = epoll_create(5);
     assert(epollfd != -1);
-    AddFd(epollfd, listenfd, true);
+    AddFd(epollfd, listenfd, true, false, true, true);
     while(m_running)
     {
         int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
@@ -69,7 +70,7 @@ void PollingServer::Run()
             printf("epoll failure\n");
             break;
         }
-    EtModel(events, ret, epollfd, listenfd);
+    LtModel(events, ret, epollfd, listenfd);
     }
     close(listenfd);
 }
@@ -91,18 +92,38 @@ int PollingServer::m_setNonblocking(int fd)
     return oldOption;
 }
 
+std::string PollingServer::m_convertToStr(int value)
+{
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
 
-void  PollingServer::AddFd(int epollfd, int fd, bool enable_et)
+void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et)
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLOUT;
+    if(enableread)
+    {
+        event.events = EPOLLIN;
+    }
+    if(enablewrite)
+    {
+        event.events = EPOLLOUT;
+    }
     if(enable_et)
     {
         event.events |= EPOLLET;
     }
-    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
-    //m_setNonblocking(fd);
+    if(bfirst)
+    {
+        epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+        m_setNonblocking(fd);
+    }
+    else
+    {
+        epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+    }
 }
 
 
@@ -115,11 +136,11 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         int sockfd = events[i].data.fd;
         if(sockfd == listenfd)
         {
-            printf("LtModel listenfd here\n");
+            printf("Listenfd LtModel here\n");
             struct sockaddr_in client_address;
             socklen_t client_addrlen = sizeof(client_address);
             int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
-            AddFd(epollfd, connfd, false);
+            AddFd(epollfd, connfd, true, false, true, true);
         }
         else if(events[i].events & EPOLLIN)
         {
@@ -128,7 +149,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
             if(ret <= 0)
             {
-                close(ret <= 0);
+                close(sockfd);
                 continue;
             }
             printf("Get %d bytes of content:%s\n", ret, buf);
@@ -141,20 +162,14 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             {
                 m_serviceKey[m_key] = 1;
             }
-            send(sockfd, &m_serviceKey[m_key], sizeof(int), 0);
+            AddFd(epollfd, sockfd, false, true, false, false);
         }
         else if(events[i].events & EPOLLOUT)
         {
-            printf("Write event tirgger.\n");
-            if(m_serviceKey.count(m_key))
-            {
-                m_serviceKey[m_key]++;
-            }
-            else
-            {
-                m_serviceKey[m_key] = 1;
-            }
-            send(sockfd, &m_serviceKey[m_key], sizeof(int), 0);
+            printf("Write event tirgger %d\n", m_serviceKey[m_key]);
+            std::string strvalue = m_convertToStr(m_serviceKey[m_key]);
+            send(sockfd, strvalue.c_str(), strvalue.size(), 0);
+            AddFd(epollfd, sockfd, true, false, false, false);
         }
         else
         {
@@ -176,7 +191,7 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
             struct sockaddr_in client_address;
             socklen_t client_addrlength = sizeof( client_address );
             int connfd = accept( listenfd, ( struct sockaddr* )&client_address, &client_addrlength );
-            AddFd( epollfd, connfd, true );
+            AddFd( epollfd, connfd, true, false, true, true);
         }
         else if ( events[i].events & EPOLLIN )
         {
@@ -192,12 +207,12 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
                         printf( "read later\n" );
                         break;
                     }
-               //     close( sockfd );
+                    close(sockfd);
                     break;
                 }
                 else if( ret == 0 )
                 {
-                    close( sockfd );
+                    close(sockfd);
                 }
                 else
                 {
@@ -213,20 +228,14 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
             {
                 m_serviceKey[m_key] = 1;
             }
-            send(sockfd, &m_serviceKey[m_key], sizeof(int), 0);
+            AddFd(epollfd, sockfd, false, true, false, true);
         }
         else if(events[i].events & EPOLLOUT)
         {
-            printf("Write event tirgger.\n");
-            if(m_serviceKey.count(m_key))
-            {
-                m_serviceKey[m_key]++;
-            }
-            else
-            {
-                m_serviceKey[m_key] = 1;
-            }
-            send(sockfd, &m_serviceKey[m_key], sizeof(int), 0);
+            printf("Write event tirgger :%d\n", m_serviceKey[m_key]);
+            std::string strvalue = m_convertToStr(m_serviceKey[m_key]);
+            send(sockfd, strvalue.c_str(), strvalue.size(), 0);
+            AddFd(epollfd, sockfd, true, false, false, true);
         }
         else
         {
