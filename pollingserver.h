@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include <sys/epoll.h>
-
+#include <sstream>
 
 class PollingServer
 {
@@ -20,7 +20,7 @@ public:
 
 private:
     int m_setNonblocking(int fd);
-    std::string m_convertToStr(int value);
+    void m_convertToStr();
 
 private:
     std::string m_servicName;
@@ -29,6 +29,8 @@ private:
     bool m_running;
     std::string m_serviceIp;
     int m_servicePort;
+    std::string m_strId;
+    std::stringstream m_strstr;
 
 };
 #endif
