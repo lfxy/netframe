@@ -12,7 +12,6 @@
 //#include <sys/epoll.h>
 #include <pthread.h>
 #include <assert.h>
-#include "timestamp.h"
 
 using namespace std;
 
@@ -22,7 +21,7 @@ using namespace std;
 
 PollingServer::PollingServer()
     : m_running(false),
-      m_strId("")
+      m_timeCheck(0)
 {
 
 }
@@ -92,13 +91,6 @@ int PollingServer::m_setNonblocking(int fd)
     return oldOption;
 }
 
-void PollingServer::m_convertToStr()
-{
-    m_strstr.str("");
-    m_strstr << m_serviceKey[m_key];
-    m_strId = m_strstr.str();
-}
-
 void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et)
 {
     epoll_event event;
@@ -140,6 +132,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             struct sockaddr_in client_address;
             socklen_t client_addrlen = sizeof(client_address);
             int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
+            m_timeCheck = 0;
             AddFd(epollfd, connfd, true, false, true, true);
         }
         else if(events[i].events & EPOLLIN)
@@ -167,8 +160,20 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         else if(events[i].events & EPOLLOUT)
         {
             //printf("Write event tirgger %d\n", m_serviceKey[m_key]);
-            m_convertToStr();
-            send(sockfd, m_strId.c_str(), m_strId.size(), 0);
+            if(m_timeCheck == 0)
+            {
+                printf("Start record!\n");
+                m_timeGet.StartRecord();
+            }
+            std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
+            send(sockfd, v.c_str(), v.size(), 0);
+            if(++m_timeCheck >= 10000)
+            {
+                m_timeGet.EndRecord();
+                printf("End record!\n");
+                m_timeCheck = 0;
+                printf("Record time is:%ld\n", m_timeGet.GetTime());
+            }
             AddFd(epollfd, sockfd, true, false, false, false);
         }
         else
@@ -233,8 +238,8 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
         else if(events[i].events & EPOLLOUT)
         {
             //printf("Write event tirgger :%d\n", m_serviceKey[m_key]);
-            m_convertToStr();
-            send(sockfd, m_strId.c_str(), m_strId.size(), 0);
+            std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
+            send(sockfd, v.c_str(), v.size(), 0);
             AddFd(epollfd, sockfd, true, false, false, true);
         }
         else

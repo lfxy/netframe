@@ -4,6 +4,7 @@
 #include <map>
 #include <sys/epoll.h>
 #include <sstream>
+#include "timestamp.h"
 
 class PollingServer
 {
@@ -20,17 +21,35 @@ public:
 
 private:
     int m_setNonblocking(int fd);
-    void m_convertToStr();
 
 private:
+    class ConvertToString
+    {
+    public:
+        template<class T>
+        std::string& GetString(T& src)
+        {
+            m_strStream.str("");
+            m_strStream << src;
+            m_strDec = m_strStream.str();
+            return m_strDec;
+        }
+
+    private:
+        std::stringstream m_strStream;
+        std::string m_strDec;
+    };
+
     std::string m_servicName;
     std::map<std::string, int> m_serviceKey;
     std::string m_key;
     bool m_running;
     std::string m_serviceIp;
     int m_servicePort;
-    std::string m_strId;
-    std::stringstream m_strstr;
+    timeStamp m_timeGet;
+    int m_timeCheck;
 
+    ConvertToString m_convertStr;
 };
+
 #endif

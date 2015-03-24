@@ -10,8 +10,8 @@ def Client():
     sock.connect(('192.168.171.128',8081))
     time.sleep(1)
     start = clock()
-    for i in  range(10000):
-        sock.send("dd")
+    for i in  range(12000):
+        sock.send("ee")
         sock.recv(1024)
     end = clock()
     sock.close()

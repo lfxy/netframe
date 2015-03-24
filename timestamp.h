@@ -19,19 +19,19 @@ public:
         gettimeofday(&m_tt, NULL);
         m_start = m_tt.tv_sec * 1000000 + m_tt.tv_usec;
     }
-    void StartEnd()
+    void EndRecord()
     {
         gettimeofday(&m_tt, NULL);
         m_end = m_tt.tv_sec * 1000000 + m_tt.tv_usec;
     }
 
-    int GetTime()
+    long GetTime()
     {
         return m_end - m_start;
     }
 private:
-    int m_start;
-    int m_end;
+    long m_start;
+    long m_end;
     struct timeval m_tt;
 
 
