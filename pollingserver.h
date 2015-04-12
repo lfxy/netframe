@@ -4,6 +4,8 @@
 #include <map>
 #include <sys/epoll.h>
 #include <sstream>
+#include <fstream>
+
 #include "timestamp.h"
 
 class PollingServer
@@ -21,6 +23,7 @@ public:
 
 private:
     int m_setNonblocking(int fd);
+    char* m_getCurrentTime();
 
 private:
     class ConvertToString
@@ -46,8 +49,9 @@ private:
     bool m_running;
     std::string m_serviceIp;
     int m_servicePort;
-    timeStamp m_timeGet;
+    //timeStamp m_timeGet;
     int m_timeCheck;
+    std::ofstream m_outTimeFile;
 
     ConvertToString m_convertStr;
 };

@@ -12,6 +12,7 @@
 //#include <sys/epoll.h>
 #include <pthread.h>
 #include <assert.h>
+#include <time.h>
 
 using namespace std;
 
@@ -37,6 +38,7 @@ void PollingServer::Init(std::string& name, std::string ip, int port)
     m_serviceIp = ip;
     m_servicePort = port;
     m_running = true;
+    m_outTimeFile.open("./time.log", std::ofstream::out | std::ofstream::app);
 }
 
 
@@ -63,7 +65,6 @@ void PollingServer::Run()
     while(m_running)
     {
         int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
-        //printf("After epoll_wait here\n");
         if(ret < 0)
         {
             printf("epoll failure\n");
@@ -78,6 +79,7 @@ void PollingServer::Run()
 void PollingServer::Release()
 {
     m_running = false;
+    m_outTimeFile.close();
 }
 
 
@@ -119,6 +121,18 @@ void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrit
 }
 
 
+char* PollingServer::m_getCurrentTime()
+{
+
+    time_t currtime;
+    currtime = time(NULL);
+    char* strTime = ctime(&currtime);
+    //printf("Current time is : %s\n", strTime);
+    m_outTimeFile.write(strTime, 30);
+    return strTime;
+}
+
+
 void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)
 {
     char buf[BUFFER_SIZE];
@@ -128,7 +142,6 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         int sockfd = events[i].data.fd;
         if(sockfd == listenfd)
         {
-            //printf("Listenfd LtModel here\n");
             struct sockaddr_in client_address;
             socklen_t client_addrlen = sizeof(client_address);
             int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
@@ -137,7 +150,6 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         }
         else if(events[i].events & EPOLLIN)
         {
-            //printf("Read event trigger once\n");
             memset(buf, '\0', BUFFER_SIZE);
             int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
             if(ret <= 0)
@@ -145,7 +157,6 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
                 close(sockfd);
                 continue;
             }
-            //printf("Get %d bytes of content:%s\n", ret, buf);
             m_key = buf;
             if(m_serviceKey.count(m_key))
             {
@@ -159,21 +170,9 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         }
         else if(events[i].events & EPOLLOUT)
         {
-            //printf("Write event tirgger %d\n", m_serviceKey[m_key]);
-            if(m_timeCheck == 0)
-            {
-                printf("Start record!\n");
-                m_timeGet.StartRecord();
-            }
             std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
             send(sockfd, v.c_str(), v.size(), 0);
-            if(++m_timeCheck >= 10000)
-            {
-                m_timeGet.EndRecord();
-                printf("End record!\n");
-                m_timeCheck = 0;
-                printf("Record time is:%ld\n", m_timeGet.GetTime());
-            }
+            m_getCurrentTime();
             AddFd(epollfd, sockfd, true, false, false, false);
         }
         else
@@ -200,7 +199,6 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
         }
         else if ( events[i].events & EPOLLIN )
         {
-            //printf( "event trigger once\n" );
             while( 1 )
             {
                 memset( buf, '\0', BUFFER_SIZE );
@@ -209,7 +207,6 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
                 {
                     if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
                     {
-                        //printf( "read later\n" );
                         break;
                     }
                     close(sockfd);
@@ -237,7 +234,6 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
         }
         else if(events[i].events & EPOLLOUT)
         {
-            //printf("Write event tirgger :%d\n", m_serviceKey[m_key]);
             std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
             send(sockfd, v.c_str(), v.size(), 0);
             AddFd(epollfd, sockfd, true, false, false, true);
