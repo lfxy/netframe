@@ -22,14 +22,14 @@ using namespace std;
 
 PollingServer::PollingServer()
     : m_running(false),
-      m_timeCheck(0)
+      m_timeCheck(0),
+      m_strTime("") 
 {
 
 }
 
 PollingServer::~PollingServer()
 {
-
 }
 
 void PollingServer::Init(std::string& name, std::string ip, int port)
