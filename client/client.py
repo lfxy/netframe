@@ -18,3 +18,6 @@ def Client():
 #    print (end - start)# / 10000
 if __name__=='__main__':
     Client()
+
+
+#tail -f time.log | uniq -c

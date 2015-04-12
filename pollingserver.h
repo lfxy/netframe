@@ -6,7 +6,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "timestamp.h"
+//#include "timestamp.h"
 
 class PollingServer
 {
@@ -52,6 +52,7 @@ private:
     //timeStamp m_timeGet;
     int m_timeCheck;
     std::ofstream m_outTimeFile;
+    std::string m_strTime;
 
     ConvertToString m_convertStr;
 };

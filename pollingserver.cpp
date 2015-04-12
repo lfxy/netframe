@@ -126,10 +126,11 @@ char* PollingServer::m_getCurrentTime()
 
     time_t currtime;
     currtime = time(NULL);
-    char* strTime = ctime(&currtime);
+//    char* strTime = ctime(&currtime);
+    m_strTime = ctime(&currtime);
     //printf("Current time is : %s\n", strTime);
-    m_outTimeFile.write(strTime, 30);
-    return strTime;
+    m_outTimeFile.write(m_strTime.c_str(), m_strTime.size());
+    return NULL;
 }
 
 
