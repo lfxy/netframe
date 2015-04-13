@@ -23,13 +23,15 @@ using namespace std;
 PollingServer::PollingServer()
     : m_running(false),
       m_timeCheck(0),
-      m_strTime("") 
+      m_strTime(""),
+      m_logBuf(new char[50])
 {
 
 }
 
 PollingServer::~PollingServer()
 {
+    delete[] m_logBuf;
 }
 
 void PollingServer::Init(std::string& name, std::string ip, int port)
@@ -38,8 +40,18 @@ void PollingServer::Init(std::string& name, std::string ip, int port)
     m_serviceIp = ip;
     m_servicePort = port;
     m_running = true;
-    m_outTimeFile.open("./time.log", std::ofstream::out | std::ofstream::app);
+    m_fileFd = fopen("./time.log", "a+");
+    //m_outTimeFile.open("./time.log", std::ofstream::out | std::ofstream::app);
 }
+
+
+void PollingServer::Release()
+{
+    m_running = false;
+    fclose(m_fileFd);
+    //m_outTimeFile.close();
+}
+
 
 
 void PollingServer::Run()
@@ -74,14 +86,6 @@ void PollingServer::Run()
     }
     close(listenfd);
 }
-
-
-void PollingServer::Release()
-{
-    m_running = false;
-    m_outTimeFile.close();
-}
-
 
 
 
@@ -121,15 +125,23 @@ void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrit
 }
 
 
-char* PollingServer::m_getCurrentTime()
+char* PollingServer::m_getCurrentTime(std::string& id)
 {
 
     time_t currtime;
     currtime = time(NULL);
-//    char* strTime = ctime(&currtime);
-    m_strTime = ctime(&currtime);
-    //printf("Current time is : %s\n", strTime);
-    m_outTimeFile.write(m_strTime.c_str(), m_strTime.size());
+    char* strTime = ctime(&currtime);
+    //m_strTime = ctime(&currtime);
+    //memset(m_logBuf, 0, 50 * sizeof(char));
+    //m_outTimeFile.write(m_strTime.c_str(), m_strTime.size());
+    int idsize = id.size();
+    memcpy(m_logBuf, strTime, 24);
+    memcpy(m_logBuf + 24, " ", sizeof(char));
+    memcpy(m_logBuf + 25, id.c_str(), idsize);
+    memcpy(m_logBuf + 25 + idsize, "\n", sizeof(char));
+    fwrite(m_logBuf, sizeof(char), 26 + idsize, m_fileFd);
+
+//    fwrite(m_logBuf, sizeof(char), 25, m_fileFd);
     return NULL;
 }
 
@@ -173,7 +185,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         {
             std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
             send(sockfd, v.c_str(), v.size(), 0);
-            m_getCurrentTime();
+            m_getCurrentTime(v);
             AddFd(epollfd, sockfd, true, false, false, false);
         }
         else

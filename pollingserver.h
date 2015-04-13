@@ -4,7 +4,8 @@
 #include <map>
 #include <sys/epoll.h>
 #include <sstream>
-#include <fstream>
+//#include <fstream>
+#include <stdio.h>
 
 //#include "timestamp.h"
 
@@ -23,7 +24,7 @@ public:
 
 private:
     int m_setNonblocking(int fd);
-    char* m_getCurrentTime();
+    char* m_getCurrentTime(std::string& id);
 
 private:
     class ConvertToString
@@ -51,8 +52,10 @@ private:
     int m_servicePort;
     //timeStamp m_timeGet;
     int m_timeCheck;
-    std::ofstream m_outTimeFile;
+//    std::ofstream m_outTimeFile;
+    FILE* m_fileFd;
     std::string m_strTime;
+    char* m_logBuf;
 
     ConvertToString m_convertStr;
 };
