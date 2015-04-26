@@ -26,12 +26,20 @@ PollingServer::PollingServer()
       m_strTime(""),
       m_logBuf(new char[50])
 {
+    m_readTime = new timeStamp("read");
+    m_convertTime = new timeStamp("convert");
+    m_sendTime = new timeStamp("send");
+    m_fileTime = new timeStamp("file");
 
 }
 
 PollingServer::~PollingServer()
 {
     delete[] m_logBuf;
+    delete m_readTime;
+    delete m_convertTime;
+    delete m_sendTime;
+    delete m_fileTime;
 }
 
 void PollingServer::Init(std::string& name, std::string ip, int port)
@@ -163,6 +171,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
         }
         else if(events[i].events & EPOLLIN)
         {
+            m_readTime->StartRecord();
             memset(buf, '\0', BUFFER_SIZE);
             int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
             if(ret <= 0)
@@ -180,12 +189,19 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
                 m_serviceKey[m_key] = 1;
             }
             AddFd(epollfd, sockfd, false, true, false, false);
+            m_readTime->EndRecord();
         }
         else if(events[i].events & EPOLLOUT)
         {
+            m_convertTime->StartRecord();
             std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
+            m_convertTime->EndRecord();
+            m_sendTime->StartRecord();
             send(sockfd, v.c_str(), v.size(), 0);
+            m_sendTime->EndRecord();
+            m_fileTime->StartRecord();
             m_getCurrentTime(v);
+            m_fileTime->EndRecord();
             AddFd(epollfd, sockfd, true, false, false, false);
         }
         else

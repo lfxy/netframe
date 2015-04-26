@@ -7,7 +7,7 @@
 //#include <fstream>
 #include <stdio.h>
 
-//#include "timestamp.h"
+#include "timestamp.h"
 
 class PollingServer
 {
@@ -50,7 +50,10 @@ private:
     bool m_running;
     std::string m_serviceIp;
     int m_servicePort;
-    //timeStamp m_timeGet;
+    timeStamp* m_readTime;
+    timeStamp* m_convertTime;
+    timeStamp* m_sendTime;
+    timeStamp* m_fileTime;
     int m_timeCheck;
 //    std::ofstream m_outTimeFile;
     FILE* m_fileFd;
