@@ -18,9 +18,11 @@ public:
     void Run();
     void Release();
     //void AddFd(int epollfd, int fd, bool enable_et);
-    void AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et);
+    //void AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et);
+    void AddReadFd(int epollfd, int fd);
+    void ModFd(int epollfd, int fd, int ev);
     void LtModel(epoll_event* events, int number, int epollfd, int listenfd);
-    void EtModel(epoll_event* events, int number, int epollfd, int listenfd);
+    //void EtModel(epoll_event* events, int number, int epollfd, int listenfd);
 
 private:
     int m_setNonblocking(int fd);

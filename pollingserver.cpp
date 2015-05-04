@@ -81,7 +81,7 @@ void PollingServer::Run()
     epoll_event events[MAX_EVENT_NUMBER];
     int epollfd = epoll_create(5);
     assert(epollfd != -1);
-    AddFd(epollfd, listenfd, true, false, true, true);
+    AddReadFd(epollfd, listenfd);
     while(m_running)
     {
         int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
@@ -105,31 +105,23 @@ int PollingServer::m_setNonblocking(int fd)
     return oldOption;
 }
 
-void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et)
+void PollingServer::AddReadFd(int epollfd, int fd)
 {
     epoll_event event;
     event.data.fd = fd;
-    if(enableread)
-    {
-        event.events = EPOLLIN;
-    }
-    if(enablewrite)
-    {
-        event.events = EPOLLOUT;
-    }
-    if(enable_et)
-    {
-        event.events |= EPOLLET;
-    }
-    if(bfirst)
-    {
-        epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
-        m_setNonblocking(fd);
-    }
-    else
-    {
-        epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
-    }
+    event.events = EPOLLIN;
+    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+    m_setNonblocking(fd);
+}
+
+
+void PollingServer::ModFd(int epollfd, int fd, int ev)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = ev;
+    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+    //m_setNonblocking(fd);
 }
 
 
@@ -167,7 +159,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             socklen_t client_addrlen = sizeof(client_address);
             int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
             m_timeCheck = 0;
-            AddFd(epollfd, connfd, true, false, true, true);
+            AddReadFd(epollfd, connfd);
         }
         else if(events[i].events & EPOLLIN)
         {
@@ -188,7 +180,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             {
                 m_serviceKey[m_key] = 1;
             }
-            AddFd(epollfd, sockfd, false, true, false, false);
+            ModFd(epollfd, sockfd, EPOLLOUT);
             m_readTime->EndRecord();
         }
         else if(events[i].events & EPOLLOUT)
@@ -197,12 +189,19 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
             m_convertTime->EndRecord();
             m_sendTime->StartRecord();
-            send(sockfd, v.c_str(), v.size(), 0);
+            int ret = send(sockfd, v.c_str(), v.size(), 0);
+            if(ret == -1)
+            {
+                if(errno == EAGAIN)
+                    printf("send EAGAIN error!!!!\n");
+                else
+                    printf("send other error\n");
+            }
             m_sendTime->EndRecord();
             m_fileTime->StartRecord();
             m_getCurrentTime(v);
             m_fileTime->EndRecord();
-            AddFd(epollfd, sockfd, true, false, false, false);
+            ModFd(epollfd, sockfd, EPOLLIN);
         }
         else
         {
@@ -213,7 +212,7 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
 }
 
 
-void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int listenfd)
+/*void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int listenfd)
 {
     char buf[ BUFFER_SIZE ];
     for ( int i = 0; i < number; i++ )
@@ -273,3 +272,32 @@ void PollingServer::EtModel(epoll_event* events, int number, int epollfd, int li
         }
     }
 }
+
+void  PollingServer::AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    if(enableread)
+    {
+        event.events = EPOLLIN;
+    }
+    if(enablewrite)
+    {
+        event.events = EPOLLOUT;
+    }
+    if(enable_et)
+    {
+        event.events |= EPOLLET;
+    }
+
+    if(bfirst)
+    {
+        epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+        m_setNonblocking(fd);
+    }
+    else
+    {
+        epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+    }
+}*/
+
