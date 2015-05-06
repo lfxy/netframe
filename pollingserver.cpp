@@ -145,76 +145,92 @@ char* PollingServer::m_getCurrentTime(std::string& id)
     return NULL;
 }
 
+void PollingServer::m_handleListenFd(int listenfd, int epollfd)
+{
+    struct sockaddr_in client_address;
+    socklen_t client_addrlen = sizeof(client_address);
+    int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
+    m_timeCheck = 0;
+    AddReadFd(epollfd, connfd);
+}
+
+int PollingServer::m_handleReadfd(int sockfd, int epollfd)
+{
+    char buf[BUFFER_SIZE];
+    m_readTime->StartRecord();
+    memset(buf, '\0', BUFFER_SIZE);
+    int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
+    if(ret <= 0)
+    {
+        if(errno != EAGAIN)
+        {
+            epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, 0);
+            close(sockfd);
+            return -1;
+        }
+    }
+    m_key = buf;
+    if(m_serviceKey.count(m_key))
+    {
+        m_serviceKey[m_key]++;
+    }
+    else
+    {
+        m_serviceKey[m_key] = 1;
+    }
+    ModFd(epollfd, sockfd, EPOLLOUT);
+    m_readTime->EndRecord();
+    return 0;
+}
+
+
+void PollingServer::m_handleSendFd(int sockfd, int epollfd)
+{
+    m_convertTime->StartRecord();
+    std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
+    m_convertTime->EndRecord();
+    m_sendTime->StartRecord();
+    int ret = send(sockfd, v.c_str(), v.size(), 0);
+    int oldopt = fcntl(sockfd, F_GETFL);
+    if(!(oldopt & O_NONBLOCK))
+    {
+        printf("The send fd is block!\n");
+    }
+    if(ret < 0)
+    {
+        if(errno == EAGAIN)
+            printf("send EAGAIN error!!!!\n");
+        else
+            printf("send other error\n");
+    }
+    m_sendTime->EndRecord();
+    m_fileTime->StartRecord();
+    m_getCurrentTime(v);
+    m_fileTime->EndRecord();
+    ModFd(epollfd, sockfd, EPOLLIN);
+}
 
 void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)
 {
-    char buf[BUFFER_SIZE];
 
     for(int i = 0; i < number; ++i)
     {
         int sockfd = events[i].data.fd;
         if(sockfd == listenfd)
         {
-            struct sockaddr_in client_address;
-            socklen_t client_addrlen = sizeof(client_address);
-            int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
-            m_timeCheck = 0;
-            AddReadFd(epollfd, connfd);
+            m_handleListenFd(listenfd, epollfd);
         }
         else if(events[i].events & EPOLLIN)
         {
-            m_readTime->StartRecord();
-            memset(buf, '\0', BUFFER_SIZE);
-            int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
-            if(ret <= 0)
-            {
-                if(errno != EAGAIN)
-                {
-                    epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, 0);
-                    close(sockfd);
-                    continue;
-                }
-            }
-            m_key = buf;
-            if(m_serviceKey.count(m_key))
-            {
-                m_serviceKey[m_key]++;
-            }
-            else
-            {
-                m_serviceKey[m_key] = 1;
-            }
-            ModFd(epollfd, sockfd, EPOLLOUT);
-            m_readTime->EndRecord();
+            m_handleReadfd(sockfd, epollfd);
         }
         else if(events[i].events & EPOLLOUT)
         {
-            m_convertTime->StartRecord();
-            std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
-            m_convertTime->EndRecord();
-            m_sendTime->StartRecord();
-            int ret = send(sockfd, v.c_str(), v.size(), 0);
-            int oldopt = fcntl(sockfd, F_GETFL);
-            if(!(oldopt & O_NONBLOCK))
-            {
-                printf("The send fd is block!\n");
-            }
-            if(ret < 0)
-            {
-                if(errno == EAGAIN)
-                    printf("send EAGAIN error!!!!\n");
-                else
-                    printf("send other error\n");
-            }
-            m_sendTime->EndRecord();
-            m_fileTime->StartRecord();
-            m_getCurrentTime(v);
-            m_fileTime->EndRecord();
-            ModFd(epollfd, sockfd, EPOLLIN);
+            m_handleSendFd(sockfd, epollfd);
         }
         else
         {
-            //printf("something else happened!\n");
+            printf("something else happened!\n");
         }
     }
 

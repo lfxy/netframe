@@ -27,6 +27,9 @@ public:
 private:
     int m_setNonblocking(int fd);
     char* m_getCurrentTime(std::string& id);
+    void m_handleListenFd(int listenfd, int epollfd);
+    int m_handleReadfd(int sockfd, int epollfd);
+    void m_handleSendFd(int sockfd, int epollfd);
 
 private:
     class ConvertToString
