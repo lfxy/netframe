@@ -168,8 +168,12 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
             if(ret <= 0)
             {
-                close(sockfd);
-                continue;
+                if(errno != EAGAIN)
+                {
+                    epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, 0);
+                    close(sockfd);
+                    continue;
+                }
             }
             m_key = buf;
             if(m_serviceKey.count(m_key))
@@ -190,7 +194,12 @@ void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int li
             m_convertTime->EndRecord();
             m_sendTime->StartRecord();
             int ret = send(sockfd, v.c_str(), v.size(), 0);
-            if(ret == -1)
+            int oldopt = fcntl(sockfd, F_GETFL);
+            if(!(oldopt & O_NONBLOCK))
+            {
+                printf("The send fd is block!\n");
+            }
+            if(ret < 0)
             {
                 if(errno == EAGAIN)
                     printf("send EAGAIN error!!!!\n");

@@ -32,6 +32,7 @@ public:
         {
             m_time = 0;
             printf("%s 30000 times used : %ld\n", m_name.c_str(), m_interval);
+            m_interval = 0;
         }
     }
 

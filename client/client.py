@@ -7,7 +7,7 @@ from time import clock
  
 def Client():
     sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    sock.connect(('192.168.171.128',8081))
+    sock.connect(('172.16.31.59',8085))
     time.sleep(1)
 #    start = clock()
     for i in  range(100000):
