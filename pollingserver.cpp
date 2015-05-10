@@ -92,8 +92,12 @@ void PollingServer::Run()
         }
     LtModel(events, ret, epollfd, listenfd);
     }
-    close(listenfd);  
-    if(epollfd != -1){
+    if(listenfd != -1)
+    {
+        close(listenfd);  
+    }
+    if(epollfd != -1)
+    {
         close(epollfd);
     }
 }
