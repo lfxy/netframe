@@ -28,7 +28,7 @@ public:
         gettimeofday(&m_tt, NULL);
         m_end = m_tt.tv_sec * 1000000 + m_tt.tv_usec;
         m_interval += m_end - m_start;
-        if(m_time >= 30000)
+        //if(m_time >= 30000)
         {
             m_time = 0;
             printf("%s 30000 times used : %ld\n", m_name.c_str(), m_interval);

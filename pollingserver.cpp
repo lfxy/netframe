@@ -81,7 +81,7 @@ void PollingServer::Run()
     epoll_event events[MAX_EVENT_NUMBER];
     int epollfd = epoll_create(5);
     assert(epollfd != -1);
-    AddReadFd(epollfd, listenfd);
+    AddFd(epollfd, listenfd, EPOLLIN);
     while(m_running)
     {
         int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
@@ -105,11 +105,12 @@ int PollingServer::m_setNonblocking(int fd)
     return oldOption;
 }
 
-void PollingServer::AddReadFd(int epollfd, int fd)
+
+void PollingServer::AddFd(int epollfd, int fd, int ev)
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN;
+    event.events = ev;
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
     m_setNonblocking(fd);
 }
@@ -151,13 +152,13 @@ void PollingServer::m_handleListenFd(int listenfd, int epollfd)
     socklen_t client_addrlen = sizeof(client_address);
     int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
     m_timeCheck = 0;
-    AddReadFd(epollfd, connfd);
+    AddFd(epollfd, connfd, EPOLLIN);
 }
 
 int PollingServer::m_handleReadfd(int sockfd, int epollfd)
 {
     char buf[BUFFER_SIZE];
-    m_readTime->StartRecord();
+    //m_readTime->StartRecord();
     memset(buf, '\0', BUFFER_SIZE);
     int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
     if(ret <= 0)
@@ -172,29 +173,34 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
     m_key = buf;
     if(m_serviceKey.count(m_key))
     {
-        m_serviceKey[m_key]++;
+        ++m_serviceKey[m_key];
     }
     else
     {
         m_serviceKey[m_key] = 1;
     }
     ModFd(epollfd, sockfd, EPOLLOUT);
-    m_readTime->EndRecord();
+    //m_readTime->EndRecord();
     return 0;
 }
 
 
 void PollingServer::m_handleSendFd(int sockfd, int epollfd)
 {
-    m_convertTime->StartRecord();
+    //m_convertTime->StartRecord();
     std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
-    m_convertTime->EndRecord();
-    m_sendTime->StartRecord();
+//    m_convertTime->EndRecord();
+//    m_sendTime->StartRecord();
     int ret = send(sockfd, v.c_str(), v.size(), 0);
-    int oldopt = fcntl(sockfd, F_GETFL);
-    if(!(oldopt & O_NONBLOCK))
+    static unsigned int write_cnt = 0;
+    if(write_cnt == 0)
     {
-        printf("The send fd is block!\n");
+        m_sendTime->StartRecord();
+    }
+    if(write_cnt++ % 100000 == 0){
+        m_sendTime->EndRecord();
+        m_sendTime->StartRecord();
+        printf("write events fd[%d], write_cnt[%u]\n", sockfd, write_cnt);
     }
     if(ret < 0)
     {
@@ -203,11 +209,11 @@ void PollingServer::m_handleSendFd(int sockfd, int epollfd)
         else
             printf("send other error\n");
     }
-    m_sendTime->EndRecord();
-    m_fileTime->StartRecord();
-    m_getCurrentTime(v);
-    m_fileTime->EndRecord();
-    ModFd(epollfd, sockfd, EPOLLIN);
+//    m_sendTime->EndRecord();
+//    m_fileTime->StartRecord();
+//    m_getCurrentTime(v);
+//    m_fileTime->EndRecord();
+   ModFd(epollfd, sockfd, EPOLLIN);
 }
 
 void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)

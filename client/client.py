@@ -7,10 +7,11 @@ from time import clock
  
 def Client():
     sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    sock.connect(('172.16.31.59',8085))
+    sock.connect(('127.0.0.1',8086))
+    #sock.connect(('172.16.31.59',8085))
     time.sleep(1)
 #    start = clock()
-    for i in  range(100000):
+    for i in  range(1000000):
         sock.send("ee")
         sock.recv(1024)
 #    end = clock()

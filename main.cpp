@@ -19,12 +19,14 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    if(argc < 3)
+/*    if(argc < 3)
     {
         printf("Need ip and port\n");
     }
     const char* ip = argv[1];
-    int port = atoi(argv[2]);
+    int port = atoi(argv[2]);*/
+    const char* ip = "127.0.0.1";
+    int port = 8086;
 
     PollingServer pollserv;
     std::string servname = "GenerateId";
