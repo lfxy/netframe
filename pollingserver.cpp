@@ -24,6 +24,7 @@ PollingServer::PollingServer()
     : m_running(false),
       m_timeCheck(0),
       m_strTime(""),
+      m_hasSendData(false),
       m_logBuf(new char[50])
 {
     m_readTime = new timeStamp("read");
@@ -48,7 +49,7 @@ void PollingServer::Init(std::string& name, std::string ip, int port)
     m_serviceIp = ip;
     m_servicePort = port;
     m_running = true;
-    m_fileFd = fopen("./time.log", "a+");
+//    m_fileFd = fopen("./time.log", "a+");
     //m_outTimeFile.open("./time.log", std::ofstream::out | std::ofstream::app);
 }
 
@@ -56,7 +57,7 @@ void PollingServer::Init(std::string& name, std::string ip, int port)
 void PollingServer::Release()
 {
     m_running = false;
-    fclose(m_fileFd);
+    //fclose(m_fileFd);
     //m_outTimeFile.close();
 }
 
@@ -147,7 +148,7 @@ char* PollingServer::m_getCurrentTime(std::string& id)
     memcpy(m_logBuf + 24, " ", sizeof(char));
     memcpy(m_logBuf + 25, id.c_str(), idsize);
     memcpy(m_logBuf + 25 + idsize, "\n", sizeof(char));
-    fwrite(m_logBuf, sizeof(char), 26 + idsize, m_fileFd);
+    //fwrite(m_logBuf, sizeof(char), 26 + idsize, m_fileFd);
 
 //    fwrite(m_logBuf, sizeof(char), 25, m_fileFd);
     return NULL;
@@ -159,7 +160,7 @@ void PollingServer::m_handleListenFd(int listenfd, int epollfd)
     socklen_t client_addrlen = sizeof(client_address);
     int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
     m_timeCheck = 0;
-    AddFd(epollfd, connfd, EPOLLIN);
+    AddFd(epollfd, connfd, EPOLLIN | EPOLLOUT);
 }
 
 int PollingServer::m_handleReadfd(int sockfd, int epollfd)
@@ -172,7 +173,7 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
     {
         if(errno != EAGAIN)
         {
-            epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, 0);
+            epoll_ctl(epollfd, EPOLL_CTL_DEL, sockfd, 0);
             close(sockfd);
             return -1;
         }
@@ -186,7 +187,8 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
     {
         m_serviceKey[m_key] = 1;
     }
-    ModFd(epollfd, sockfd, EPOLLOUT);
+    m_hasSendData = true;
+    //ModFd(epollfd, sockfd, EPOLLOUT);
     //m_readTime->EndRecord();
     return 0;
 }
@@ -194,33 +196,38 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
 
 void PollingServer::m_handleSendFd(int sockfd, int epollfd)
 {
-    //m_convertTime->StartRecord();
-    std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
-//    m_convertTime->EndRecord();
-//    m_sendTime->StartRecord();
-    int ret = send(sockfd, v.c_str(), v.size(), 0);
-    static unsigned int write_cnt = 0;
-    if(write_cnt == 0)
+    if(m_hasSendData)
     {
-        m_sendTime->StartRecord();
+        //m_convertTime->StartRecord();
+        std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
+    //    m_convertTime->EndRecord();
+    //    m_sendTime->StartRecord();
+        int ret = send(sockfd, v.c_str(), v.size(), 0);
+        static unsigned int write_cnt = 0;
+        if(write_cnt == 0)
+        {
+            m_sendTime->StartRecord();
+        }
+        if(write_cnt++ % 100000 == 0){
+            m_sendTime->EndRecord();
+            m_sendTime->StartRecord();
+            printf("write events fd[%d], write_cnt[%u]\n", sockfd, write_cnt);
+        }
+        if(ret < 0)
+        {
+            if(errno == EAGAIN)
+                printf("send EAGAIN error!!!!\n");
+            else
+                printf("send other error\n");
+        }
+        m_hasSendData = false;
+    //    m_sendTime->EndRecord();
+    //    m_fileTime->StartRecord();
+    //    m_getCurrentTime(v);
+    //    m_fileTime->EndRecord();
+       //ModFd(epollfd, sockfd, EPOLLIN);
+
     }
-    if(write_cnt++ % 100000 == 0){
-        m_sendTime->EndRecord();
-        m_sendTime->StartRecord();
-        printf("write events fd[%d], write_cnt[%u]\n", sockfd, write_cnt);
-    }
-    if(ret < 0)
-    {
-        if(errno == EAGAIN)
-            printf("send EAGAIN error!!!!\n");
-        else
-            printf("send other error\n");
-    }
-//    m_sendTime->EndRecord();
-//    m_fileTime->StartRecord();
-//    m_getCurrentTime(v);
-//    m_fileTime->EndRecord();
-   ModFd(epollfd, sockfd, EPOLLIN);
 }
 
 void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)

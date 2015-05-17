@@ -31,7 +31,7 @@ public:
         //if(m_time >= 30000)
         {
             m_time = 0;
-            printf("%s 30000 times used : %ld\n", m_name.c_str(), m_interval);
+            printf("%s 100000 times used : %ld\n", m_name.c_str(), m_interval);
             m_interval = 0;
         }
     }

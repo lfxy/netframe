@@ -61,8 +61,9 @@ private:
     timeStamp* m_fileTime;
     int m_timeCheck;
 //    std::ofstream m_outTimeFile;
-    FILE* m_fileFd;
+    //FILE* m_fileFd;
     std::string m_strTime;
+    bool m_hasSendData;
     char* m_logBuf;
 
     ConvertToString m_convertStr;
