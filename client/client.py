@@ -13,7 +13,7 @@ def Client():
 #    start = clock()
     for i in  range(1000000):
         sock.send("abee")
-        print sock.recv(1024)
+        sock.recv(1024)
 #    end = clock()
     sock.close()
 #    print (end - start)# / 10000
