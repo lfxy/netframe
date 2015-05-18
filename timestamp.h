@@ -31,22 +31,22 @@ public:
         //if(m_time >= 30000)
         {
             m_time = 0;
-            printf("%s 100000 times used : %ld\n", m_name.c_str(), m_interval);
+            printf("%s 100000 times used : %lld\n", m_name.c_str(), m_interval);
             m_interval = 0;
         }
     }
 
-    long GetTime()
+    long long GetTime()
     {
         return m_interval;
     }
 private:
     int m_time;
     std::string m_name;
-    long m_start;
-    long m_end;
+    long long m_start;
+    long long m_end;
     struct timeval m_tt;
-    long m_interval;
+    long long m_interval;
 
 
 };

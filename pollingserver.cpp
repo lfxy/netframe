@@ -160,7 +160,8 @@ void PollingServer::m_handleListenFd(int listenfd, int epollfd)
     socklen_t client_addrlen = sizeof(client_address);
     int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
     m_timeCheck = 0;
-    AddFd(epollfd, connfd, EPOLLIN | EPOLLOUT);
+    AddFd(epollfd, connfd, EPOLLIN);
+    //AddFd(epollfd, connfd, EPOLLIN | EPOLLOUT);
 }
 
 int PollingServer::m_handleReadfd(int sockfd, int epollfd)
@@ -188,7 +189,7 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
         m_serviceKey[m_key] = 1;
     }
     m_hasSendData = true;
-    //ModFd(epollfd, sockfd, EPOLLOUT);
+    ModFd(epollfd, sockfd, EPOLLOUT);
     //m_readTime->EndRecord();
     return 0;
 }
@@ -225,7 +226,7 @@ void PollingServer::m_handleSendFd(int sockfd, int epollfd)
     //    m_fileTime->StartRecord();
     //    m_getCurrentTime(v);
     //    m_fileTime->EndRecord();
-       //ModFd(epollfd, sockfd, EPOLLIN);
+       ModFd(epollfd, sockfd, EPOLLIN);
 
     }
 }
