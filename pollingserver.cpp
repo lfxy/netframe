@@ -169,7 +169,8 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
     char buf[BUFFER_SIZE];
     //m_readTime->StartRecord();
     memset(buf, '\0', BUFFER_SIZE);
-    int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
+    //int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
+    int ret = read(sockfd, buf, BUFFER_SIZE - 1);
     if(ret <= 0)
     {
         if(errno != EAGAIN)
@@ -197,13 +198,14 @@ int PollingServer::m_handleReadfd(int sockfd, int epollfd)
 
 void PollingServer::m_handleSendFd(int sockfd, int epollfd)
 {
-    if(m_hasSendData)
+//    if(m_hasSendData)
     {
         //m_convertTime->StartRecord();
         std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
     //    m_convertTime->EndRecord();
     //    m_sendTime->StartRecord();
-        int ret = send(sockfd, v.c_str(), v.size(), 0);
+//        int ret = send(sockfd, v.c_str(), v.size(), 0);
+        int ret = write(sockfd, v.c_str(), v.size());
         static unsigned int write_cnt = 0;
         if(write_cnt == 0)
         {

@@ -12,8 +12,8 @@ def Client():
     time.sleep(1)
 #    start = clock()
     for i in  range(1000000):
-        sock.send("ee")
-        sock.recv(1024)
+        sock.send("abee")
+        print sock.recv(1024)
 #    end = clock()
     sock.close()
 #    print (end - start)# / 10000
