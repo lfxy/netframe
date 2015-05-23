@@ -16,7 +16,6 @@
 
 using namespace std;
 
-#define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 10
 
 
@@ -24,6 +23,7 @@ PollingServer::PollingServer()
     : m_running(false),
       m_timeCheck(0),
       m_strTime(""),
+      m_poll(new Polling),
       m_hasSendData(false),
       m_logBuf(new char[50])
 {
@@ -36,6 +36,7 @@ PollingServer::PollingServer()
 
 PollingServer::~PollingServer()
 {
+    delete m_poll;
     delete[] m_logBuf;
     delete m_readTime;
     delete m_convertTime;
@@ -79,27 +80,21 @@ void PollingServer::Run()
     ret = listen(listenfd, 5);
     assert(ret != -1);
 
-    epoll_event events[MAX_EVENT_NUMBER];
-    int epollfd = epoll_create(5);
-    assert(epollfd != -1);
-    AddFd(epollfd, listenfd, EPOLLIN);
+    m_poll->AddFd(listenfd, EPOLLIN);
+    m_setNonblocking(listenfd);
     while(m_running)
     {
-        int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+        int ret = m_poll->Wait();
         if(ret < 0)
         {
             printf("epoll failure\n");
             break;
         }
-    LtModel(events, ret, epollfd, listenfd);
+    LtModel(ret, listenfd);
     }
     if(listenfd != -1)
     {
         close(listenfd);  
-    }
-    if(epollfd != -1)
-    {
-        close(epollfd);
     }
 }
 
@@ -113,25 +108,6 @@ int PollingServer::m_setNonblocking(int fd)
     return oldOption;
 }
 
-
-void PollingServer::AddFd(int epollfd, int fd, int ev)
-{
-    epoll_event event;
-    event.data.fd = fd;
-    event.events = ev;
-    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
-    m_setNonblocking(fd);
-}
-
-
-void PollingServer::ModFd(int epollfd, int fd, int ev)
-{
-    epoll_event event;
-    event.data.fd = fd;
-    event.events = ev;
-    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
-    //m_setNonblocking(fd);
-}
 
 
 char* PollingServer::m_getCurrentTime(std::string& id)
@@ -154,57 +130,75 @@ char* PollingServer::m_getCurrentTime(std::string& id)
     return NULL;
 }
 
-void PollingServer::m_handleListenFd(int listenfd, int epollfd)
+void PollingServer::m_handleListenFd(int listenfd)
 {
     struct sockaddr_in client_address;
     socklen_t client_addrlen = sizeof(client_address);
     int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlen);
     m_timeCheck = 0;
-    AddFd(epollfd, connfd, EPOLLIN);
+    m_poll->AddFd(connfd, EPOLLIN);
+    m_setNonblocking(connfd);
     //AddFd(epollfd, connfd, EPOLLIN | EPOLLOUT);
 }
 
-int PollingServer::m_handleReadfd(int sockfd, int epollfd)
+int PollingServer::m_handleReadfd(int sockfd)
 {
     char buf[BUFFER_SIZE];
-    //m_readTime->StartRecord();
     memset(buf, '\0', BUFFER_SIZE);
     //int ret = recv(sockfd, buf, BUFFER_SIZE - 1, 0);
     int ret = read(sockfd, buf, BUFFER_SIZE - 1);
-    if(ret <= 0)
+    if(ret > 0)
     {
-        if(errno != EAGAIN)
+        m_key = buf;
+        if(m_serviceKey.count(m_key))
         {
-            epoll_ctl(epollfd, EPOLL_CTL_DEL, sockfd, 0);
-            close(sockfd);
+            ++m_serviceKey[m_key];
+        }
+        else
+        {
+            m_serviceKey[m_key] = 1;
+        }
+        m_hasSendData = true;
+        m_poll->ModFd(sockfd, EPOLLOUT);
+        return 1;
+    }
+    else if(ret == 0)
+    {
+        printf("connect break!\n");
+        m_poll->RemoveFd(sockfd);
+        return 0;
+    }
+    else if(ret == -1)
+    {
+        if(errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            printf("read return with EAGAIN\n");
             return -1;
         }
-    }
-    m_key = buf;
-    if(m_serviceKey.count(m_key))
-    {
-        ++m_serviceKey[m_key];
+        else
+        {
+            printf("read return with errno:%d\n", errno);
+            m_poll->RemoveFd(sockfd);
+            close(sockfd);
+            return -2;
+        }
+
     }
     else
     {
-        m_serviceKey[m_key] = 1;
+        printf("read return with result:%d\n", ret);
+        m_poll->RemoveFd(sockfd);
+        close(sockfd);
+        return -3;
     }
-    m_hasSendData = true;
-    ModFd(epollfd, sockfd, EPOLLOUT);
-    //m_readTime->EndRecord();
-    return 0;
 }
 
 
-void PollingServer::m_handleSendFd(int sockfd, int epollfd)
+int PollingServer::m_handleSendFd(int sockfd)
 {
 //    if(m_hasSendData)
     {
-        //m_convertTime->StartRecord();
         std::string& v = m_convertStr.GetString(m_serviceKey[m_key]);
-    //    m_convertTime->EndRecord();
-    //    m_sendTime->StartRecord();
-//        int ret = send(sockfd, v.c_str(), v.size(), 0);
         int ret = write(sockfd, v.c_str(), v.size());
         static unsigned int write_cnt = 0;
         if(write_cnt == 0)
@@ -216,40 +210,56 @@ void PollingServer::m_handleSendFd(int sockfd, int epollfd)
             m_sendTime->StartRecord();
             printf("write events fd[%d], write_cnt[%u]\n", sockfd, write_cnt);
         }
-        if(ret < 0)
-        {
-            if(errno == EAGAIN)
-                printf("send EAGAIN error!!!!\n");
-            else
-                printf("send other error\n");
-        }
         m_hasSendData = false;
-    //    m_sendTime->EndRecord();
-    //    m_fileTime->StartRecord();
-    //    m_getCurrentTime(v);
-    //    m_fileTime->EndRecord();
-       ModFd(epollfd, sockfd, EPOLLIN);
+        if(ret > 0)
+        {
+            m_poll->ModFd(sockfd, EPOLLIN);
+            return 1;
+        }
+        else if(ret == -1)
+        {
+            if(errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                printf("send EAGAIN error!!!!\n");
+                return -1;
+            }
+            else
+            {
+                printf("send other errno: %d\n", errno);
+                m_poll->RemoveFd(sockfd);
+                close(sockfd);
+                return -2;
+            }
+        }
+        else
+        {
+            printf("send other result: %d\n", ret);
+            m_poll->RemoveFd(sockfd);
+            close(sockfd);
+            return -3;
 
+        }
     }
 }
 
-void PollingServer::LtModel(epoll_event* events, int number, int epollfd, int listenfd)
+void PollingServer::LtModel(int number, int listenfd)
 {
 
     for(int i = 0; i < number; ++i)
     {
-        int sockfd = events[i].data.fd;
+        int sockfd = m_poll->GetActiveFd(i);
+        int event = m_poll->GetActiveEvent(i);
         if(sockfd == listenfd)
         {
-            m_handleListenFd(listenfd, epollfd);
+            m_handleListenFd(listenfd);
         }
-        else if(events[i].events & EPOLLIN)
+        else if(CanRead(event))
         {
-            m_handleReadfd(sockfd, epollfd);
+            m_handleReadfd(sockfd);
         }
-        else if(events[i].events & EPOLLOUT)
+        else if(CanWrite(event))
         {
-            m_handleSendFd(sockfd, epollfd);
+            m_handleSendFd(sockfd);
         }
         else
         {

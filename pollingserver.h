@@ -6,6 +6,7 @@
 #include <sstream>
 //#include <fstream>
 #include <stdio.h>
+#include "Polling.h"
 
 #include "timestamp.h"
 
@@ -17,19 +18,15 @@ public:
     void Init(std::string& name, std::string ip, int port);
     void Run();
     void Release();
-    //void AddFd(int epollfd, int fd, bool enable_et);
-    //void AddFd(int epollfd, int fd, bool enableread, bool enablewrite, bool bfirst, bool enable_et);
-    void AddFd(int epollfd, int fd, int ev);
-    void ModFd(int epollfd, int fd, int ev);
-    void LtModel(epoll_event* events, int number, int epollfd, int listenfd);
+    void LtModel(int number, int listenfd);
     //void EtModel(epoll_event* events, int number, int epollfd, int listenfd);
 
 private:
     int m_setNonblocking(int fd);
     char* m_getCurrentTime(std::string& id);
-    void m_handleListenFd(int listenfd, int epollfd);
-    int m_handleReadfd(int sockfd, int epollfd);
-    void m_handleSendFd(int sockfd, int epollfd);
+    void m_handleListenFd(int listenfd);
+    int m_handleReadfd(int sockfd);
+    int m_handleSendFd(int sockfd);
 
 private:
     class ConvertToString
@@ -63,6 +60,7 @@ private:
 //    std::ofstream m_outTimeFile;
     //FILE* m_fileFd;
     std::string m_strTime;
+    Polling* m_poll;
     bool m_hasSendData;
     char* m_logBuf;
 
