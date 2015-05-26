@@ -165,7 +165,6 @@ int PollingServer::m_handleReadfd(int sockfd)
     else if(ret == 0)
     {
         printf("connect break!\n");
-        m_poll->RemoveFd(sockfd);
         return 0;
     }
     else if(ret == -1)
@@ -255,7 +254,10 @@ void PollingServer::LtModel(int number, int listenfd)
         }
         else if(CanRead(event))
         {
-            m_handleReadfd(sockfd);
+            if(m_handleReadfd(sockfd) == 0)
+            {
+                m_poll->RemoveFd(sockfd);
+            }
         }
         else if(CanWrite(event))
         {
