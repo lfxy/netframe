@@ -1,25 +1,28 @@
 .PHONY : all clean
-TARGET = myprocess
-
+TARGET = netservice
 
 all: $(TARGET)
 CXX = g++
 RM := rm
-VPATH =.
-CXXPPFLAGS :=
-CXXFLAGS = -Wall -g
+VPATH =. ./src
+INCLUDE_PATH:=./
+LIBRARY_PATH:=./lib
+#CXXPPFLAGS := -D__RELEASE_VERSION__
+CXXFLAGS = -Wall -O2 -I$(INCLUDE_PATH)
+LIBDIRS := -L$(LIBRARY_PATH)/
 CXXLDFLAGS = -lpthread
-LIBDIRS :=
-
-DIRS :=.
+DIRS :=. ./src
 FILES = $(foreach dir, $(DIRS), $(wildcard $(dir)/*.cpp))
-OBJS = $(patsubst %.cpp, %.o, $(FILES))
+OBJS = $(patsubst %.cpp, %.o,$(FILES))
 
 $(TARGET):$(OBJS)
-	$(CXX) -o $@ $(LIBDIRS) $^ $(CXXLDFLAGS)
+	@echo $(FILES)
+	@echo $(OBJS)
+	$(CXX) -o $@ $(LIBDIRS) $^ $(CXXLDFLAGS) 
 
 %.o: %.cpp
-	$(CXX) $(CXXPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
 	-@$(RM) $(TARGET) $(OBJS)
+
