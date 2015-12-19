@@ -5,11 +5,9 @@ all: $(TARGET)
 CXX = g++
 RM := rm
 VPATH =. ./src
-INCLUDE_PATH:=./
-LIBRARY_PATH:=./lib
 #CXXPPFLAGS := -D__RELEASE_VERSION__
-CXXFLAGS = -Wall -O2 -I$(INCLUDE_PATH)
-LIBDIRS := -L$(LIBRARY_PATH)/
+CXXFLAGS = -Wall -O2 -I ./ -I ./include/
+LIBDIRS := -L ./lib
 CXXLDFLAGS = -lpthread
 DIRS :=. ./src
 FILES = $(foreach dir, $(DIRS), $(wildcard $(dir)/*.cpp))
