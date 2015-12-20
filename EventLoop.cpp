@@ -109,7 +109,7 @@ void EventLoop::removeHandler(Handler* handle)
 {
     assert(handle->ownerLoop() == this);
     assertInLoopThread();
-    //if(m_bEventHandling)
+    if(m_beventHandling)
     {
         assert(m_currentActiveHandler == handle || std::find(m_activeHandlers.begin(), m_activeHandlers.end(), handle) == m_activeHandlers.end());
     }

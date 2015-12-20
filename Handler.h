@@ -30,6 +30,7 @@ public:
     void enableReading() {m_events |= kReadEvent; m_updateHandler();}
     void enableWriting() {m_events |= kWriteEvent; m_updateHandler();}
     void disableWriting() {m_events &= ~kWriteEvent; m_updateHandler();}
+    void disableAll() {m_events = kNoneEvent; m_updateHandler();}
     bool isWriting() const {return m_events & kWriteEvent;}
 
     int getIndex(){return m_index;}
