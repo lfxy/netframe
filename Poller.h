@@ -12,12 +12,12 @@ class Poller : boost::noncopyable
         typedef std::vector<Handler*> HandlerList;
         Poller(EventLoop* loop);
         virtual ~Poller();
-        virtual void poll(int timeMs, HandlerList* activeChannels) = 0;
+        virtual void PollEvent(int timeoutMs, HandlerList* activeHandles) = 0;
         virtual void updateHandler(Handler* handler) = 0;
         virtual void removeHandler(Handler* handler) = 0;
 
         static Poller* newDefaultPoller(EventLoop* loop);
-        void asserInLoopThread()
+        void assertInLoopThread()
         {
             m_pLoop->assertInLoopThread();
         }

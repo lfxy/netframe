@@ -25,7 +25,7 @@ public:
     void setTie(const boost::shared_ptr<void>& obj){m_tie = obj; m_btied = true;}
     int getFd() const {return m_fd;}
     int getEvents() const {return m_events;}
-    void setEvents(int revt) {m_revents = revt;}
+    void setRevents(int revt) {m_revents = revt;}
     bool isNoneEvent() const {return m_events == kNoneEvent;}
     void enableReading() {m_events |= kReadEvent; m_updateHandler();}
     void enableWriting() {m_events |= kWriteEvent; m_updateHandler();}
@@ -33,8 +33,8 @@ public:
     void disableAll() {m_events = kNoneEvent; m_updateHandler();}
     bool isWriting() const {return m_events & kWriteEvent;}
 
-    int getIndex(){return m_index;}
-    void setIndex(int idx){m_index = idx;}
+    int getState(){return m_state;}
+    void setState(int idx){m_state = idx;}
     EventLoop* ownerLoop(){return m_pLoop;}
     void removeHandler();
 
@@ -50,7 +50,7 @@ private:
     const int m_fd;
     int m_events;
     int m_revents;
-    int m_index;
+    int m_state;
 
     boost::weak_ptr<void> m_tie;
     bool m_btied;
