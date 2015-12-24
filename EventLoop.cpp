@@ -1,7 +1,7 @@
 #include "EventLoop.h"
 #include "Mutex.h"
 #include "Handler.h"
-//#include "Poller.h"
+#include "Poller.h"
 //#include "SocketsOps.h"
 //#include "TimerQueue.h"
 
@@ -33,6 +33,7 @@ EventLoop::EventLoop()
       m_beventHandling(false),
       m_callingPendingFunctors(false),
       m_threadId(CurrentThread::tid()),
+      m_poller(Poller::newDefaultPoller(this)),
       m_wakeupFd(createEventfd()),
       m_wakeupHandler(new Handler(this, m_wakeupFd)),
       m_currentActiveHandler(NULL)
@@ -60,7 +61,21 @@ void EventLoop::loop()
     assert(!m_blooping);
     assertInLoopThread();
     m_blooping = true;
-//    ::poll(NULL, 0, 5 * 1000);
+    m_bquit = false;
+    while(!m_bquit)
+    {
+        m_activeHandlers.clear();
+        m_poller->PollEvent(kPollTimeMs, &m_activeHandlers);
+        m_beventHandling = true;
+        for(HandlerList::iterator it = m_activeHandlers.begin(); it != m_activeHandlers.end(); ++it)
+        {
+            m_currentActiveHandler = *it;
+            m_currentActiveHandler->handleEvent();
+        }
+        m_currentActiveHandler = NULL;
+        m_beventHandling = false;
+        m_doPendingFunctors();
+    }
     m_blooping = false;
 }
 
@@ -102,7 +117,7 @@ void EventLoop::updateHandler(Handler* handle)
 {
     assert(handle->ownerLoop() == this);
     assertInLoopThread();
-    //m_poller->updateHandler(handle);
+    m_poller->updateHandler(handle);
 }
 
 void EventLoop::removeHandler(Handler* handle)
@@ -113,7 +128,7 @@ void EventLoop::removeHandler(Handler* handle)
     {
         assert(m_currentActiveHandler == handle || std::find(m_activeHandlers.begin(), m_activeHandlers.end(), handle) == m_activeHandlers.end());
     }
-    //m_poller->removeChannel(handle);
+    m_poller->removeHandler(handle);
 }
 
 void EventLoop::m_abortNotInLoopThread()

@@ -10,7 +10,7 @@
 #include <vector>
 
 class Handler;
-//class Poller;
+class Poller;
 
 class EventLoop : boost::noncopyable
 {
@@ -52,7 +52,7 @@ private:
     bool m_beventHandling;
     bool m_callingPendingFunctors;
     const pid_t m_threadId;
-    //boost::scoped_ptr<Poller> m_poller;
+    boost::scoped_ptr<Poller> m_poller;
     int m_wakeupFd;
     boost::scoped_ptr<Handler> m_wakeupHandler;
     HandlerList m_activeHandlers;
