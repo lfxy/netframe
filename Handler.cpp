@@ -12,7 +12,7 @@ Handler::Handler(EventLoop* loop, int fd)
       m_fd(fd),
       m_events(0),
       m_revents(0),
-      m_state(0),
+      m_state(-1),
       m_btied(false),
       m_bEventHandling(false)
 {
