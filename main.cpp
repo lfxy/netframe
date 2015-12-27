@@ -15,6 +15,7 @@
 #include "EventLoop.h"
 #include "Handler.h"
 #include <sys/timerfd.h>
+#include "EventLoopThread.h"
 
 using namespace std;
 
@@ -28,6 +29,43 @@ void timeout()
     g_loop->quit();
 }
 
+void test1()
+{
+    EventLoop loop;
+    g_loop = &loop;
+    int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+    Handler handler(&loop, timerfd);
+    handler.setReadCallback(timeout);
+    handler.enableReading();
+
+    struct itimerspec howlong;
+    bzero(&howlong, sizeof(howlong));
+    howlong.it_value.tv_sec = 5;
+    ::timerfd_settime(timerfd, 0, &howlong, NULL);
+
+    loop.loop();
+
+    ::close(timerfd);
+}
+
+void runInThread()
+{
+    printf("runInThread():pid=%d, tid=%d\n", getpid(), CurrentThread::tid());
+}
+
+void test2()
+{
+    printf("test2():pid=%d, tid=%d\n", getpid(), CurrentThread::tid());
+
+    EventLoopThread loopThread;
+    EventLoop* loop = loopThread.startLoop();
+    printf("main 1111111111\n");
+    loop->runInLoop(runInThread);
+    printf("main 222222222222\n");
+    sleep(1);
+    loop->quit();
+    printf("exit test2\n");
+}
 
 int main(int argc, char** argv)
 {
@@ -46,21 +84,7 @@ int main(int argc, char** argv)
     pollserv.Run();
     pollserv.Release();*/
 
-    EventLoop loop;
-    g_loop = &loop;
-    int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    Handler handler(&loop, timerfd);
-    handler.setReadCallback(timeout);
-    handler.enableReading();
-
-    struct itimerspec howlong;
-    bzero(&howlong, sizeof(howlong));
-    howlong.it_value.tv_sec = 5;
-    ::timerfd_settime(timerfd, 0, &howlong, NULL);
-
-    loop.loop();
-
-    ::close(timerfd);
+    test2();
 
     return 0;
 }

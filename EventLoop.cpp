@@ -97,6 +97,7 @@ void EventLoop::runInLoop(const Functor& cb)
     }
     else
     {
+        printf("EventLoop::runInLoop not in loop thread.\n");
         queueInLoop(cb);
     }
 }
