@@ -53,7 +53,7 @@ void runInThread()
     printf("runInThread():pid=%d, tid=%d\n", getpid(), CurrentThread::tid());
 }
 
-void test2()
+void test_EventLoopThread()
 {
     printf("test2():pid=%d, tid=%d\n", getpid(), CurrentThread::tid());
 
@@ -83,8 +83,7 @@ int main(int argc, char** argv)
     pollserv.Init(servname, ip, port);
     pollserv.Run();
     pollserv.Release();*/
-
-    test2();
+    test_EventLoopThread();
 
     return 0;
 }
