@@ -58,6 +58,16 @@ void SocketOps::bindOrDie(int sockfd, const struct sockaddr_in& addr)
     }
 }
 
+void SocketOps::listenOrDie(int sockfd)
+{
+    int ret = ::listen(sockfd, SOMAXCONN);
+    if(ret < 0)
+    {
+        printf("SocketOps::listenOrDie\n");
+    }
+
+}
+
 int SocketOps::accept(int sockfd, struct sockaddr_in* addr)
 {
     socklen_t addrlen = sizeof(*addr);
