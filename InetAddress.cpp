@@ -12,8 +12,8 @@ InetAddress::InetAddress(uint16_t port)
 {
     bzero(&m_addr, sizeof(m_addr));
     m_addr.sin_family = AF_INET;
-    m_addr.sin_addr.s_addr = htobe32(kInaddrAny);
-    m_addr.sin_port = htobe16(port);
+    m_addr.sin_addr.s_addr = SocketOps::hostToNetwork32(kInaddrAny);
+    m_addr.sin_port = SocketOps::hostToNetwork16(port);
 }
 
 InetAddress::InetAddress(const std::string& ip, uint16_t port)
