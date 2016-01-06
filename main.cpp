@@ -16,6 +16,9 @@
 #include "Handler.h"
 #include <sys/timerfd.h>
 #include "EventLoopThread.h"
+#include "Acceptor.h"
+#include "InetAddress.h"
+#include "SocketOps.h"
 
 using namespace std;
 
@@ -67,6 +70,23 @@ void test_EventLoopThread()
     printf("exit test2\n");
 }
 
+void newConnection(int sockfd, const InetAddress& peerAddr)
+{
+    printf("newConnection:addcept a new connection from %s\n", peerAddr.toHostPort().c_str());
+    ::write(sockfd, "how are you?\n", 13);
+    SocketOps::close(sockfd);
+}
+void test_Acceptor()
+{
+    printf("test_Acceptor:pid = %d\n", getpid());
+    InetAddress listenaddr(9981);
+    EventLoop loop;
+    Acceptor acceptor(&loop, listenaddr);
+    acceptor.setNewConnectionCallback(newConnection);
+    acceptor.listen();
+    loop.loop();
+}
+
 int main(int argc, char** argv)
 {
 /*    if(argc < 3)
@@ -83,7 +103,8 @@ int main(int argc, char** argv)
     pollserv.Init(servname, ip, port);
     pollserv.Run();
     pollserv.Release();*/
-    test_EventLoopThread();
+    //test_EventLoopThread();
+    test_Acceptor();
 
     return 0;
 }
