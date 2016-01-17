@@ -38,13 +38,13 @@ class TcpConnection : boost::noncopyable, public boost::enable_shared_from_this<
         void setContext(const boost::any& context){ m_context = context; }
         const boost::any& getContext() const { return m_context; }
 
-        void setConnectionCB(const ConnectionCallback& cb) { m_connectionCB = cb; }
-        void setMessageCB(const MessageCallback& cb) { m_messageCB = cb; }
-        void setWriteCompleteCB(const WriteCompleteCallback& cb) { m_writeCompleteCB = cb; }
-        void setHighWaterMakrCB(const HighWaterCallback& cb, size_t highWaterMark) { m_highWaterCB = cb; m_highWaterMark = highWaterMark; }
+        void setConnectionCallback(const ConnectionCallback& cb) { m_connectionCB = cb; }
+        void setMessageCallback(const MessageCallback& cb) { m_messageCB = cb; }
+        void setWriteCompleteCallback(const WriteCompleteCallback& cb) { m_writeCompleteCB = cb; }
+        void setHighWaterMakrCallback(const HighWaterCallback& cb, size_t highWaterMark) { m_highWaterCB = cb; m_highWaterMark = highWaterMark; }
 
         Buffer* getInputBuffer() { return &m_inputBuffer; }
-        void setCloseCB(const CloseCallback& cb) { m_closeCB = cb; }
+        void setCloseCallback(const CloseCallback& cb) { m_closeCB = cb; }
         void connectionEstablished();
         void connectionDestroyed();
 

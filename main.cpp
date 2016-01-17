@@ -19,6 +19,7 @@
 #include "Acceptor.h"
 #include "InetAddress.h"
 #include "SocketOps.h"
+#include "TcpServer.h"
 
 using namespace std;
 
@@ -87,6 +88,53 @@ void test_Acceptor()
     loop.loop();
 }
 
+std::string message;
+
+void onConnection(const TcpConnectionPtr& conn)
+{
+    if(conn->isConnected())
+    {
+        printf("onConnection: new connection [%s] from %s\n", conn->getName().c_str(), conn->getPeerAddress().toHostPort().c_str());
+        conn->send(message);
+    }
+    else
+    {
+        printf("onConnection: connection [%s] is down\n", conn->getName().c_str());
+    }
+}
+
+void onWriteComplete(const TcpConnectionPtr& conn)
+{
+    conn->send(message);
+}
+
+void onMessage(const TcpConnectionPtr& conn,
+               Buffer* buf)
+{
+  printf("onMessage(): received %d bytes from connection [%s]\n",
+         buf->readableBytes(),
+         conn->getName().c_str());
+
+    printf("ccccccccc:%s\n", buf->retrieveAllAsString().c_str());
+  buf->retrieveAll();
+}
+
+
+void test_TcpServer()
+{
+    std::string servername = "test_Tcpserver";
+    message = "bbbbbbbbbbbbbbb\n";
+    InetAddress listenAddr(9981);
+    EventLoop loop;
+    TcpServer server(&loop, listenAddr, servername);
+    server.setConnectionCallback(onConnection);
+    server.setMessageCallback(onMessage);
+    server.setWriteCompleteCallback(onWriteComplete);
+    server.start();
+
+    loop.loop();
+}
+
 int main(int argc, char** argv)
 {
 /*    if(argc < 3)
@@ -104,7 +152,8 @@ int main(int argc, char** argv)
     pollserv.Run();
     pollserv.Release();*/
     //test_EventLoopThread();
-    test_Acceptor();
+    //test_Acceptor();
+    test_TcpServer();
 
     return 0;
 }
