@@ -142,11 +142,11 @@ set wildmenu
 
 "}}}
 "about tab{{{
-map tn :tabnext<cr>
-map tp :tabprevious<cr>
-map te :tabedit
-map tc :tabclose<cr>
-map tr :tabnew<space>
+nnoremap tn :tabnext<cr>
+nnoremap tp :tabprevious<cr>
+nnoremap te :tabedit
+nnoremap tc :tabclose<cr>
+nnoremap tr :tabnew<space>
 "}}}
 "ctrlP{{{ 
 let g:ctrlp_map = '<c-p>'
@@ -249,10 +249,12 @@ let NERDSpaceDelims=1 " 让注释符与语句之间留一个空格
 let g:checksyntax_auto = 0 " 不自动检查
 
 "swich windows
-nnoremap <C-h> <C-w>h
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-l> <C-w>l
+nnoremap <leader>h <C-w>h
+nnoremap <leader>j <C-w>j
+nnoremap <leader>k <C-w>k
+nnoremap <leader>l <C-w>l
+nnoremap <leader>c <C-w>c
+nnoremap <leader>o <C-w>o
 "}}}
 "unused{{{
 "-----------------------------------------------------------------
@@ -312,4 +314,19 @@ nnoremap <C-l> <C-w>l
 "let Tlist_Compact_Format = 1
 
 "map <leader>t :TlistToggle<cr>
+"}}}
+"leader{{{
+"nnoremap <Leader>fu :CtrlPFunky<Cr>
+"nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
+"map <leader>o o<Esc>
+"map <leader>g :Ag<space>
+"nmap <leader>t :TagbarToggle<CR>
+"nmap <leader>r :TagbarOpen fj<CR>
+"nmap <leader>w :WMToggle<cr>
+"nnoremap <leader>h <C-w>h
+"nnoremap <leader>j <C-w>j
+"nnoremap <leader>k <C-w>k
+"nnoremap <leader>l <C-w>l
+"nnoremap <leader>c <C-w>c
+"nnoremap <leader>o <C-w>o
 "}}}
