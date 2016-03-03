@@ -57,4 +57,3 @@ void EventLoopThread::threadFunc()
     loop.loop();
     printf("EventLoopThread::threadFunc 222222\n");
 }
-

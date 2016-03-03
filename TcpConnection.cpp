@@ -5,7 +5,6 @@
 #include "SocketOps.h"
 
 #include <boost/bind.hpp>
-#include <error.h>
 #include <stdio.h>
 #include <errno.h>
 

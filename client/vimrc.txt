@@ -10,19 +10,27 @@ call vundle#begin()
 
 " let Vundle manage Vundle, required
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'winmanager'
 Plugin 'kien/ctrlp.vim'
 Bundle 'tacahiroy/ctrlp-funky'
 Plugin 'rking/ag.vim'
 Plugin 'supertab'
 Plugin 'majutsushi/tagbar'
-"Plugin 'taglist.vim'
+Plugin 'a.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'vimcdoc'
+Plugin 'easymotion/vim-easymotion'
+Plugin 'colorselector'
+"Plugin 'Tabular'
+"Plugin 'EasyMotion'
+"Plugin 'cscope.vim'
+"Plugin 'CCTree'
+"Plugin 'c.vim'
+"Plugin 'The-NERD-tree'
 "Plugin 'Valloric/YouCompleteMe'
-"Plugin 'scrooloose/nerdtree'
 "Plugin 'tpope/vim-surround'
 "Plugin 'scrooloose/nerdcommenter'
 "Plugin 'Shougo/neocomplete.vim'
-"Plugin 'majutsushi/tagbar'
 
 "Not sure to install such package, did I need it?
 "Plugin 'scrooloose/syntastic'
@@ -47,6 +55,7 @@ call vundle#end()            " required
 " }}}
 "general{{{
 let mapleader = ","
+"filetype plugin on
 
 syntax on " 自动语法高亮
 colorscheme desert "darkblue "zellner evening darkblue murphy morning 
@@ -64,7 +73,6 @@ set nowrapscan " 禁止在搜索到文件两端时重新搜索
 set incsearch " 输入搜索内容时就显示搜索结果
 set ignorecase		"搜索忽略大小写
 set hlsearch " 搜索时高亮显示被找到的文本
-"set autochdir " 自动切换当前目录为当前文件所在的目录
 set showmatch " 插入括号时，短暂地跳转到匹配的对应括号
 set matchtime=2 " 短暂跳转到匹配括号的时间
 set magic 		" 设置魔术
@@ -76,7 +84,8 @@ set termencoding=utf-8
 set fencs=utf-8,gb18030,gbk,gb2312
 set statusline=%F%m%r%h%w\ [POS=%l,%v][%p%%]
 map <C-i> I<Esc>
-map <leader>o o<Esc>
+map to o<Esc>
+imap <M-space> <Esc>
 
 set cursorline " 突出显示当前行
 hi CursorColumn cterm=NONE ctermbg=red ctermfg=white guibg=NONE guifg=NONE
@@ -100,6 +109,9 @@ set backspace=indent,eol,start
 set whichwrap+=<,>,h,l		" 允许backspace和光标键跨越行边界
 set viminfo='1000
 set wildmenu
+"set autochdir " 自动切换当前目录为当前文件所在的目录
+""imap jj <Esc>
+
 "set cmdheight=1 " 设定命令行的行数为 1
 "set nobackup " 覆盖文件时不备份
 "filetype on  
@@ -147,6 +159,8 @@ nnoremap tp :tabprevious<cr>
 nnoremap te :tabedit
 nnoremap tc :tabclose<cr>
 nnoremap tr :tabnew<space>
+
+nnoremap cd :cd<space>
 "}}}
 "ctrlP{{{ 
 let g:ctrlp_map = '<c-p>'
@@ -187,14 +201,35 @@ set tags=tags;
 "tagbar{{{
 let g:tagbar_ctags_bin = '/usr/bin/ctags'
 nmap <leader>t :TagbarToggle<CR>
-nmap <leader>r :TagbarOpen fj<CR>
+"nmap <leader>r :TagbarOpen fj<CR>
 let g:tagbar_width = 30
 let g:tagbar_autofocus = 0
 let g:tagbar_show_linenumbers = 1
 let g:tagbar_sort = 0
+let g:tagbar_autofocus = 1
+let g:tagbar_autoclose = 1
 "todo"let g:tagbar_autoshowtag = 1
 "todo"let g:tagbar_autopreview = 1
 "todo"autocmd VimEnter * nested :TagbarOpen
+"}}}
+"nerdtree{{{
+map <leader>r :NERDTreeToggle<CR>
+
+" to close the whole workspace if the NERDTree is the last windows
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+let NERDTreeShowBookmarks=1
+let NERDTreeChDirMode=2
+let g:NERDTreeDirArrowExpandable = '>'
+let g:NERDTreeDirArrowCollapsible = '<'
+let g:NERDTreeAutoCenter = 1
+let g:NERDTreeHighlightCursorline = 1
+let NERDTreeShowLineNumbers=1
+"}}}
+"easymotion{{{
+let g:EasyMotion_leader_key = '<Leader>'
+"map <Leader>j <Plug>(easymotion-j)
+"map <Leader>k <Plug>(easymotion-k)
+"nmap s <Plug>(easymotion-overwin-f)
 "}}}
 "auto complete{{{
 :inoremap ( ()<ESC>i
@@ -219,16 +254,6 @@ set completeopt=longest,menu
 let g:SuperTabRetainCompletionType=2
 let g:neocomplete#enable_at_startup = 1
 "}}}
-"winmanager{{{ 
-let g:miniBufExplMapWindowNavVim = 1
-let g:miniBufExplMapWindowNavArrows = 1
-let g:miniBufExplMapCTabSwitchBufs = 1
-let g:miniBufExplModSelTarget = 1
-let g:winManagerWidth = 40
-
-let g:winManagerWindowLayout='FileExplorer,TagList'
-nmap <leader>w :WMToggle<cr>
-"}}}
 "locate last cursor location{{{
 if has("autocmd")
     autocmd BufReadPost *
@@ -241,20 +266,41 @@ endif
 set showcmd
 set listchars=tab:>-,trail:-,eol:$
 set showmode
-map <F10> :set paste<CR>
-map <F11> :set nopaste<CR>
+map <F9> :set paste<CR>
+map <F10> :set nopaste<CR>
 set ai
 set si
 let NERDSpaceDelims=1 " 让注释符与语句之间留一个空格
 let g:checksyntax_auto = 0 " 不自动检查
 
 "swich windows
-nnoremap <leader>h <C-w>h
-nnoremap <leader>j <C-w>j
-nnoremap <leader>k <C-w>k
-nnoremap <leader>l <C-w>l
-nnoremap <leader>c <C-w>c
-nnoremap <leader>o <C-w>o
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+nnoremap <C-c> <C-w>c
+nnoremap <C-o> <C-w>o
+let g:CCTreeCscopeDb = "cscope.out"
+let g:CCTreeRecursiveDepth = 3
+let g:CCTreeOrientation = "leftabove"
+"}}}
+"------------------------------------------------
+"leader{{{
+"nnoremap <Leader>fu :CtrlPFunky<Cr>
+"map  <Leader>f <Plug>(easymotion-bd-f)
+"nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
+"map <leader>g :Ag<space>
+"nmap <leader>t :TagbarToggle<CR>
+"""nmap <leader>w :WMToggle<cr>
+"map <leader>r :NERDTreeToggle<CR>
+
+"nnnoremap <C-h> <C-w>h
+"nnnoremap <C-j> <C-w>j
+"nnnoremap <C-k> <C-w>k
+"nnnoremap <C-l> <C-w>l
+"nnnoremap <C-c> <C-w>c
+"nnnoremap <C-o> <C-w>o
+"map to o<Esc>
 "}}}
 "unused{{{
 "-----------------------------------------------------------------
@@ -315,18 +361,13 @@ nnoremap <leader>o <C-w>o
 
 "map <leader>t :TlistToggle<cr>
 "}}}
-"leader{{{
-"nnoremap <Leader>fu :CtrlPFunky<Cr>
-"nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
-"map <leader>o o<Esc>
-"map <leader>g :Ag<space>
-"nmap <leader>t :TagbarToggle<CR>
-"nmap <leader>r :TagbarOpen fj<CR>
+"winmanager{{{ 
+"let g:miniBufExplMapWindowNavVim = 1
+"let g:miniBufExplMapWindowNavArrows = 1
+"let g:miniBufExplMapCTabSwitchBufs = 1
+"let g:miniBufExplModSelTarget = 1
+"let g:winManagerWidth = 40
+
+"let g:winManagerWindowLayout='FileExplorer,TagList'
 "nmap <leader>w :WMToggle<cr>
-"nnoremap <leader>h <C-w>h
-"nnoremap <leader>j <C-w>j
-"nnoremap <leader>k <C-w>k
-"nnoremap <leader>l <C-w>l
-"nnoremap <leader>c <C-w>c
-"nnoremap <leader>o <C-w>o
 "}}}
