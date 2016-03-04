@@ -18,9 +18,10 @@ Plugin 'majutsushi/tagbar'
 Plugin 'a.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'scrooloose/nerdcommenter'
-Plugin 'vimcdoc'
+"Plugin 'vimcdoc'
 Plugin 'easymotion/vim-easymotion'
 Plugin 'colorselector'
+Plugin 'asins/vimcdoc'
 "Plugin 'Tabular'
 "Plugin 'EasyMotion'
 "Plugin 'cscope.vim'
@@ -29,7 +30,6 @@ Plugin 'colorselector'
 "Plugin 'The-NERD-tree'
 "Plugin 'Valloric/YouCompleteMe'
 "Plugin 'tpope/vim-surround'
-"Plugin 'scrooloose/nerdcommenter'
 "Plugin 'Shougo/neocomplete.vim'
 
 "Not sure to install such package, did I need it?
@@ -109,6 +109,8 @@ set backspace=indent,eol,start
 set whichwrap+=<,>,h,l		" 允许backspace和光标键跨越行边界
 set viminfo='1000
 set wildmenu
+let helptags=$VIM."/vimfiles/doc"
+set helplang=cn
 "set autochdir " 自动切换当前目录为当前文件所在的目录
 ""imap jj <Esc>
 
@@ -171,6 +173,7 @@ let g:ctrlp_custom_ignore = {
     \ 'file': '\v\.(exe|so|dll|zip|tar|tar.gz|pyc)$'
     \}
 
+let g:ctrlp_open_new_file = 'v'
 "let g:ctrlp_map = '<leader>p'
 "let g:ctrlp_match_window_bottom=1
 "let g:ctrlp_max_height=15
@@ -278,11 +281,11 @@ nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
-nnoremap <C-c> <C-w>c
-nnoremap <C-o> <C-w>o
-let g:CCTreeCscopeDb = "cscope.out"
-let g:CCTreeRecursiveDepth = 3
-let g:CCTreeOrientation = "leftabove"
+"nnoremap <C-c> <C-w>c
+"nnoremap <C-o> <C-w>o
+"let g:CCTreeCscopeDb = "cscope.out"
+"let g:CCTreeRecursiveDepth = 3
+"let g:CCTreeOrientation = "leftabove"
 "}}}
 "------------------------------------------------
 "leader{{{
