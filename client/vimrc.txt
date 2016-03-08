@@ -18,9 +18,8 @@ Plugin 'majutsushi/tagbar'
 Plugin 'a.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'scrooloose/nerdcommenter'
-"Plugin 'vimcdoc'
 Plugin 'easymotion/vim-easymotion'
-Plugin 'colorselector'
+Plugin 'flazz/vim-colorschemes'
 Plugin 'asins/vimcdoc'
 "Plugin 'Tabular'
 "Plugin 'EasyMotion'
@@ -54,11 +53,11 @@ call vundle#end()            " required
 "
 " }}}
 "general{{{
-let mapleader = ","
+let mapleader = "\<Space>"
 "filetype plugin on
 
 syntax on " 自动语法高亮
-colorscheme desert "darkblue "zellner evening darkblue murphy morning 
+colorscheme desert "darkblue zellner evening darkblue murphy morning 
 "syntax enable
 "set background=light
 "colorscheme solarized
@@ -84,7 +83,7 @@ set termencoding=utf-8
 set fencs=utf-8,gb18030,gbk,gb2312
 set statusline=%F%m%r%h%w\ [POS=%l,%v][%p%%]
 map <C-i> I<Esc>
-map to o<Esc>
+map <Leader>o o<Esc>
 imap <M-space> <Esc>
 
 set cursorline " 突出显示当前行
@@ -117,8 +116,6 @@ set helplang=cn
 "set cmdheight=1 " 设定命令行的行数为 1
 "set nobackup " 覆盖文件时不备份
 "filetype on  
-"filetype plugin on
-"filetype indent on 
 "set backupcopy=yes " 设置备份时的行为为覆盖
 "set noerrorbells " 关闭错误信息响铃
 "set novisualbell " 关闭使用可视响铃代替呼叫
@@ -204,13 +201,13 @@ set tags=tags;
 "tagbar{{{
 let g:tagbar_ctags_bin = '/usr/bin/ctags'
 nmap <leader>t :TagbarToggle<CR>
-"nmap <leader>r :TagbarOpen fj<CR>
 let g:tagbar_width = 30
 let g:tagbar_autofocus = 0
 let g:tagbar_show_linenumbers = 1
 let g:tagbar_sort = 0
 let g:tagbar_autofocus = 1
 let g:tagbar_autoclose = 1
+"nmap <leader>r :TagbarOpen fj<CR>
 "todo"let g:tagbar_autoshowtag = 1
 "todo"let g:tagbar_autopreview = 1
 "todo"autocmd VimEnter * nested :TagbarOpen
@@ -219,11 +216,12 @@ let g:tagbar_autoclose = 1
 map <leader>r :NERDTreeToggle<CR>
 
 " to close the whole workspace if the NERDTree is the last windows
+autocmd StdinReadPre * let s:std_in=1
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 let NERDTreeShowBookmarks=1
 let NERDTreeChDirMode=2
-let g:NERDTreeDirArrowExpandable = '>'
-let g:NERDTreeDirArrowCollapsible = '<'
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
 let g:NERDTreeAutoCenter = 1
 let g:NERDTreeHighlightCursorline = 1
 let NERDTreeShowLineNumbers=1
@@ -289,88 +287,19 @@ nnoremap <C-l> <C-w>l
 "}}}
 "------------------------------------------------
 "leader{{{
-"nnoremap <Leader>fu :CtrlPFunky<Cr>
 "map  <Leader>f <Plug>(easymotion-bd-f)
-"nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
 "map <leader>g :Ag<space>
-"nmap <leader>t :TagbarToggle<CR>
-"""nmap <leader>w :WMToggle<cr>
 "map <leader>r :NERDTreeToggle<CR>
-
-"nnnoremap <C-h> <C-w>h
-"nnnoremap <C-j> <C-w>j
-"nnnoremap <C-k> <C-w>k
-"nnnoremap <C-l> <C-w>l
-"nnnoremap <C-c> <C-w>c
-"nnnoremap <C-o> <C-w>o
-"map to o<Esc>
-"}}}
-"unused{{{
-"-----------------------------------------------------------------
-" plugin - NeoComplCache.vim 自动补全插件
-"-----------------------------------------------------------------
-"let g:AutoComplPop_NotEnableAtStartup = 1
-"let g:NeoComplCache_EnableAtStartup = 1
-"let g:NeoComplCache_SmartCase = 1
-"let g:NeoComplCache_TagsAutoUpdate = 1
-"let g:NeoComplCache_EnableInfo = 1
-"let g:NeoComplCache_EnableCamelCaseCompletion = 1
-"let g:NeoComplCache_MinSyntaxLength = 3
-"let g:NeoComplCache_EnableSkipCompletion = 1
-"let g:NeoComplCache_SkipInputTime = '0.5'
-"let g:NeoComplCache_SnippetsDir = $VIMFILES.'/snippets'
-"inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
-"imap <silent> <C-e> <Plug>(neocomplcache_snippets_expand)
-"smap <silent> <C-e> <Plug>(neocomplcache_snippets_expand)
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-"一些不错的映射转换语法（如果在一个文件中混合了不同语言时有用）
-"nnoremap <leader>1 :set filetype=xhtml<CR>
-"nnoremap <leader>2 :set filetype=css<CR>
-"nnoremap <leader>3 :set filetype=javascript<CR>
-"nnoremap <leader>4 :set filetype=php<CR>
-
-" set fileformats=unix,dos,mac
-" nmap <leader>fd :se fileformat=dos<CR>
-" nmap <leader>fu :se fileformat=unix<CR>
-
-" use Ctrl+[l|n|p|cc] to list|next|previous|jump to count the result
-" map <C-x>l <ESC>:cl<CR>
-" map <C-x>n <ESC>:cn<CR>
-" map <C-x>p <ESC>:cp<CR>
-" map <C-x>c <ESC>:cc<CR>
-
-" 映射全选+复制 ctrl+a
-"map <C-A> ggVGY
-"map! <C-A> <Esc>ggVGY
-"map <F12> gg=G
-" 选中状态下 Ctrl+c 复制
-"map! <C-c> "+y
-"nnoremap <F2> :g/^\s*$/d<CR>  "去空行  
-"}}}
-"Taglist{{{
-"let Tlist_Show_One_File = 1 " 不同时显示多个文件的tag，只显示当前文件的
-"let Tlist_Exit_OnlyWindow = 1 " 如果taglist窗口是最后一个窗口，则退出vim
-"let Tlist_Use_Right_Window = 1 " 在右侧窗口中显示taglist窗口
-"let Tlist_File_Fold_Auto_Close=2 " 自动折叠当前非编辑文件的方法列表
-"let Tlist_Auto_Open = 0			"czq
-"let Tlist_Auto_Update = 1
-"let Tlist_Hightlight_Tag_On_BufEnter = 1
-"let Tlist_Enable_Fold_Column = 1
-"let Tlist_Process_File_Always = 1
-"let Tlist_Display_Prototype = 0
-"let Tlist_Compact_Format = 1
-
-"map <leader>t :TlistToggle<cr>
-"}}}
-"winmanager{{{ 
-"let g:miniBufExplMapWindowNavVim = 1
-"let g:miniBufExplMapWindowNavArrows = 1
-"let g:miniBufExplMapCTabSwitchBufs = 1
-"let g:miniBufExplModSelTarget = 1
-"let g:winManagerWidth = 40
-
-"let g:winManagerWindowLayout='FileExplorer,TagList'
+"nmap <leader>t :TagbarToggle<CR>
 "nmap <leader>w :WMToggle<cr>
+"nnoremap <Leader>fu :CtrlPFunky<Cr>
+"nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
+
+"nnoremap <C-h> <C-w>h
+"nnoremap <C-j> <C-w>j
+"nnoremap <C-k> <C-w>k
+"nnoremap <C-l> <C-w>l
+"nnoremap <C-c> <C-w>c
+"nnoremap <C-o> <C-w>o
+"map to o<Esc>
 "}}}
