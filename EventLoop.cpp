@@ -2,6 +2,7 @@
 #include "Mutex.h"
 #include "Handler.h"
 #include "Poller.h"
+#include "SocketOps.h"
 //#include "SocketsOps.h"
 //#include "TimerQueue.h"
 
@@ -139,22 +140,22 @@ void EventLoop::m_abortNotInLoopThread()
 
 void EventLoop::wakeup()
 {
-    //uint64_t one = 1;
-    /*ssize_t n = sockets::write(m_wakeupFd, &one, sizeof(one));
+    uint64_t one = 1;
+    ssize_t n = SocketOps::write(m_wakeupFd, &one, sizeof(one));
     if(n != sizeof(one))
     {
-        printf("wakeup %d bytes\n", n);
-    }*/
+        printf("wakeup %d bytes\n", (int)n);
+    }
 }
 
 void EventLoop::m_handleRead()
 {
-    //uint64_t one = 1;
-    /*ssize_t n = sockets::read(m_wakeupFd, &one, sizeof(one));
+    uint64_t one = 1;
+    ssize_t n = SocketOps::read(m_wakeupFd, &one, sizeof(one));
     if(n != sizeof(one))
     {
-        printf("wakeup %d bytes\n", n);
-    }*/
+        printf("wakeup %d bytes\n", (int)n);
+    }
 }
 
 void EventLoop::m_doPendingFunctors()
